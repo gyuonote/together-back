@@ -2,4 +2,4 @@
 /* eslint-disable no-global-assign */
 
 require = require('esm')(module /*, options*/);
-export default require('./main.js');
+module.exports = require('./main.js');
