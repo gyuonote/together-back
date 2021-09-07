@@ -2,10 +2,10 @@ import Joi from 'joi';
 import User from '../../models/user';
 
 /*
-    POST /api/auth/register
-    {
-        username: 'velopert',
-        password: 'mypass123'
+    POST  
+      {
+        "username": "velopert",
+        "password": "mypass123"
     }
 */
 export const register = async (ctx) => {
