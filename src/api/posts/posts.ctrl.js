@@ -14,7 +14,7 @@ export const getPostById = async (ctx, next) => {
     const post = await Post.findById(id);
     //포스트가 존재 하지 않을 떄
     if (!post) {
-      ctx.stauts = 404; // Not Found
+      ctx.status = 404; // Not Found
       return;
     }
     ctx.state.post = post;
@@ -73,7 +73,7 @@ export const write = async (ctx) => {
 };
 
 /*
-  GET /api/posts
+  GET /api/posts?username=&tag=&page=
 */
 export const list = async (ctx) => {
   // query는 문자열이기 때문에 숫자로 변환해 주어야 합니다.
@@ -84,24 +84,28 @@ export const list = async (ctx) => {
     ctx.status = 400;
     return;
   }
+  const { tag, username } = ctx.query;
+  //tag, username 값이 유효하면 객체 안에 넣고, 그렇지 않으면 넣지 않음
+  const query = {
+    ...(username ? { 'user.username': username } : {}),
+    ...(tag ? { tags: tag } : {}),
+  };
 
   try {
     /*ort 함수의 파라미터는 {key:1} 형식으로 넣는데요. key는 정렬 할 필드를 설정하는 부분이며,
      오른쪽 값을 1로 설정하면 오름차순으로, -1로 설정하면 내림차순으로 정렬합니다.*/
-    const posts = await Post.find()
+    const posts = await Post.find(query)
       .sort({ _id: -1 })
       .limit(10)
       .skip((page - 1) * 10)
       .exec();
-    const postCount = await Post.countDocuments().exec();
+    const postCount = await Post.countDocuments(query).exec();
     ctx.set('Last-Page', Math.ceil(postCount / 10));
-    ctx.body = posts
-      .map((post) => post.toJSON())
-      .map((post) => ({
-        ...post,
-        body:
-          post.body.length < 200 ? post.body : `${post.body.slice(0, 200)}...`,
-      }));
+    ctx.body = posts.map((post) => ({
+      ...post,
+      body:
+        post.body.length < 200 ? post.body : `${post.body.slice(0, 200)}...`,
+    }));
   } catch (e) {
     ctx.throw(500, e);
   }
