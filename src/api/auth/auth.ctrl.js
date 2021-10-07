@@ -2,7 +2,7 @@ import Joi from 'joi';
 import User from '../../models/user';
 
 /*
-    POST  
+    POST  /api/auth/register
       {
         "username": "velopert",
         "password": "mypass123"
@@ -49,6 +49,14 @@ export const register = async (ctx) => {
     ctx.throw(500, e);
   }
 };
+
+/*
+  POST /api/auth/login
+  {
+    username: 'velopert',
+    password: 'mypass123'
+  }
+*/
 
 //로그인
 export const login = async (ctx) => {
