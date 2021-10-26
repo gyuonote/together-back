@@ -4,6 +4,7 @@ import checkLoggedIn from '../../lib/checkLoggedIn';
 
 const posts = new Router();
 
+posts.get('/search', postsCtrl.searchPosts);
 posts.get('/', postsCtrl.list);
 posts.post('/', checkLoggedIn, postsCtrl.write);
 

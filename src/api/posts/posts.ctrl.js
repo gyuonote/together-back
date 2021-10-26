@@ -103,6 +103,50 @@ const removeHtmlAndShorten = (body) => {
   });
   return filtered.length < 200 ? filtered : `${filtered.slice(0, 200)} ...`;
 };
+
+/*
+ GET /api/posts/search
+*/
+
+export const searchPosts = async (ctx) => {
+  console.log(ctx.query);
+  const page = parseInt(ctx.query.page || '1', 10);
+  let options = [];
+  if (page < 1) {
+    ctx.status = 400;
+    return;
+  }
+  try {
+    if (ctx.query.option == 'title') {
+      options = [{ title: new RegExp(ctx.query.content) }];
+    } else if (ctx.query.option == 'body') {
+      options = [{ body: new RegExp(ctx.query.content) }];
+    } else if (ctx.query.option == 'title_body') {
+      options = [
+        { title: new RegExp(ctx.query.content) },
+        { body: new RegExp(ctx.query.content) },
+      ];
+    } else {
+      const err = new Error('검색 옵션이 없습니다.');
+      err.status = 400;
+      throw err;
+    }
+    const posts = await Post.find({ $or: options })
+      .sort({ _id: -1 })
+      .limit(10)
+      .skip((page - 1) * 10)
+      .lean()
+      .exec();
+    const postCount = await Post.countDocuments(posts).exec();
+    ctx.set('Last-Page', Math.ceil(postCount / 10));
+    ctx.body = posts.map((post) => ({
+      ...post,
+      body: removeHtmlAndShorten(post.body),
+    }));
+  } catch (e) {
+    ctx.throw(500, e);
+  }
+};
 /*
   GET /api/posts?username=&tag=&page=
 */
@@ -125,7 +169,7 @@ export const list = async (ctx) => {
   try {
     /*ort 함수의 파라미터는 {key:1} 형식으로 넣는데요. key는 정렬 할 필드를 설정하는 부분이며,
      오른쪽 값을 1로 설정하면 오름차순으로, -1로 설정하면 내림차순으로 정렬합니다.*/
-    const posts = await Post.find(query)
+    const posts = await Post.find({ query })
       .sort({ _id: -1 })
       .limit(10)
       .skip((page - 1) * 10)
